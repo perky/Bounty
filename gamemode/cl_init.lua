@@ -22,7 +22,8 @@ Sprite[7] = Material( "sprites/key_7" )
 Sprite[8] = Material( "sprites/key_8" )
 Sprite[9] = Material( "sprites/key_9" )
 
-function RenderEffects()
+function GM:RenderScreenspaceEffects()
+	self.BaseClass:RenderScreenspaceEffects()
 	
 	cam.Start3D(EyePos(), EyeAngles())
 		for k,ply in pairs(player:GetAll()) do
@@ -44,10 +45,8 @@ function RenderEffects()
 		end
 	cam.End3D()
 end
-hook.Add( "RenderScreenspaceEffects", "Bounty_RenderScreenspaceEffects", RenderEffects )
 
 function GM:UpdateHUD_Alive( InRound )
- 
         if ( GAMEMODE.RoundBased || GAMEMODE.TeamBased ) then
        
                 local Bar = vgui.Create( "DHudBar" )
@@ -90,10 +89,11 @@ function GM:UpdateHUD_Alive( InRound )
                 end
                
         end
- 
 end
 
-function HUDpaint()
+function GM:HUDPaint()
+	self.BaseClass:HUDPaint()
+	
 	if( #NoticeArray > 0 ) then
 		if(NoticeState == 0) then
 			NoticeAlpha = NoticeAlpha + 5
@@ -136,13 +136,12 @@ function HUDpaint()
 		draw.SimpleText( String, "BountyBigFont", ScrW()/2, (ScrH()/2)+65, Color(255,0,0,MultAlpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	end
 end
-hook.Add("HUDPaint", "Bounty_HUDPaint", HUDpaint)
 
-function ChangeState( state )
+local function ChangeState( state )
 	NoticeState = state
 end
 
-function ChangeMultState( state )
+local function ChangeMultState( state )
 	MultState = state
 end
 
@@ -156,7 +155,7 @@ function GM:AddScoreboardKills( ScoreBoard )
         ScoreBoard:AddColumn( "Cash", 50, f, 0.5, nil, 6, 6 )
 end
 
-function OnKill( um )
+local function OnKill( um )
 	local cash = um:ReadShort()
 	local mult = um:ReadFloat()
 	if(cash > 0) then

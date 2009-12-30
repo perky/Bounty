@@ -9,24 +9,9 @@ util.PrecacheSound("bounty/ching2.wav")
 util.PrecacheSound("bounty/critical.wav")
 local CashMultiplier = 10
 
-function PlayerInitialSpawn( ply )
-	ply.bounty = 1
-	ply.cash   = 0
-	ply.multiplier = 1
-	UpdatePlayerVariables( ply )
-	
-	ply:SetTeam(TEAM_MAIN)
-	ply:SetRandomClass()
-end
-hook.Add( "PlayerInitialSpawn", "Bounty_playerInitialSpawn", PlayerInitialSpawn )
-
-function PlayerJoinTeam( ply, teamid )
-	if teamid == TEAM_UNASSIGNED then
-		ply:SetTeam( TEAM_MAIN )
-	end
-end
-hook.Add("PlayerJoinTeam", "Bounty_PlayerJoinTeam", PlayerJoinTeam)
-
+----------------------
+-- Round functions. --
+----------------------
 function GM:CanStartRound( iNum )
 	for k,ply in pairs(player.GetAll()) do
 		ply:SetTeam(TEAM_MAIN)
@@ -36,7 +21,7 @@ function GM:CanStartRound( iNum )
 end
 
 function GM:OnRoundStart( iNum )
-	UTIL_UnFreezeAllPlayers()
+	self.BaseClass:OnRoundStart( iNum )
 	
 	for k,player in pairs( player.GetAll() ) do
 		player.bounty = 1
@@ -46,7 +31,67 @@ function GM:OnRoundStart( iNum )
 	end
 end
 
-local function OnPlayerDeath( Victim, Weapon, Killer )
+function GM:RoundTimerEnd()
+	if ( !GAMEMODE:InRound() ) then return end 
+ 
+	local winner, draw = GAMEMODE:SelectCurrentlyWinningPlayer()
+	if draw == 1 then
+		GAMEMODE:RoundEndWithResult( -1, "Stalemate!" )
+	else
+		GAMEMODE:RoundEndWithResult( winner )
+	end
+end
+
+function GM:CheckPlayerDeathRoundEnd()
+	return false
+end
+
+function GM:SelectCurrentlyWinningPlayer()
+	local winner
+	local topscore = 0
+	local draw = 1
+ 
+	for k,v in pairs( player.GetAll() ) do
+		if v:Team() != TEAM_CONNECTING and v:Team() != TEAM_UNASSIGNED then
+			if v.cash > topscore then
+				winner = v
+				topscore = v.cash
+				draw = 0
+			elseif v.cash == topscore then
+				draw = 1
+			end
+		end
+	end
+ 
+	return winner, draw
+end
+
+-----------------------
+-- Player functions. --
+-----------------------
+function GM:PlayerInitialSpawn( ply )
+	self.BaseClass:PlayerInitialSpawn( ply )
+	
+	ply.bounty = 1
+	ply.cash   = 0
+	ply.multiplier = 1
+	UpdatePlayerVariables( ply )
+	
+	ply:SetTeam(TEAM_MAIN)
+	ply:SetRandomClass()
+end
+
+function GM:PlayerJoinTeam( ply, teamid )
+	self.BaseClass:PlayerJoinTeam( ply, teamid )
+	
+	if teamid == TEAM_UNASSIGNED then
+		ply:SetTeam( TEAM_MAIN )
+	end
+end
+
+function GM:PlayerDeath( Victim, Weapon, Killer )
+	self.BaseClass:PlayerDeath( Victim, Weapon, Killer )
+
 	Killer.bounty = Killer.bounty + 1
 	local newCash = math.floor(Victim.bounty * Killer.multiplier * CashMultiplier)
 	Killer.cash   = Killer.cash + newCash
@@ -82,54 +127,17 @@ local function OnPlayerDeath( Victim, Weapon, Killer )
 		Killer:EmitSound("bounty/critical.wav", 70, 100)
 	end
 end
-hook.Add("PlayerDeath", "Bounty_PlayerDeath", OnPlayerDeath)
 
-function UpdatePlayerVariables( Player )
-	Player:SetNetworkedInt("bounty", Player.bounty)
-	Player:SetNetworkedInt("cash", Player.cash)
-	Player:SetNetworkedInt("multiplier", Player.multiplier)
-end
-
-function GM:CheckPlayerDeathRoundEnd()
-	return false
-end
-
-function ScaleDamage( ply, hitgroup, dmginfo )
+function GM:ScalePlayerDamage( ply, hitgroup, dmginfo )
 	if ( hitgroup == HITGROUP_HEAD ) then
 		dmginfo:ScaleDamage( 1.6 )
 	else
 		dmginfo:ScaleDamage( 0.4 )
 	end
 end
-hook.Add("ScalePlayerDamage","Bounty_ScaleDamage",ScaleDamage)
 
-function GM:RoundTimerEnd()
-	if ( !GAMEMODE:InRound() ) then return end 
- 
-	local winner, draw = GAMEMODE:SelectCurrentlyWinningPlayer()
-	if draw == 1 then
-		GAMEMODE:RoundEndWithResult( -1, "Stalemate!" )
-	else
-		GAMEMODE:RoundEndWithResult( winner )
-	end
-end
-
-function GM:SelectCurrentlyWinningPlayer()
-	local winner
-	local topscore = 0
-	local draw = 1
- 
-	for k,v in pairs( player.GetAll() ) do
-		if v:Team() != TEAM_CONNECTING and v:Team() != TEAM_UNASSIGNED then
-			if v.cash > topscore then
-				winner = v
-				topscore = v.cash
-				draw = 0
-			elseif v.cash == topscore then
-				draw = 1
-			end
-		end
-	end
- 
-	return winner, draw
+local function UpdatePlayerVariables( Player )
+	Player:SetNetworkedInt("bounty", Player.bounty)
+	Player:SetNetworkedInt("cash", Player.cash)
+	Player:SetNetworkedInt("multiplier", Player.multiplier)
 end
