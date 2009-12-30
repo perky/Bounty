@@ -137,11 +137,11 @@ function GM:HUDPaint()
 	end
 end
 
-local function ChangeState( state )
+function ChangeState( state )
 	NoticeState = state
 end
 
-local function ChangeMultState( state )
+function ChangeMultState( state )
 	MultState = state
 end
 
