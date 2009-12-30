@@ -136,7 +136,7 @@ function GM:ScalePlayerDamage( ply, hitgroup, dmginfo )
 	end
 end
 
-local function UpdatePlayerVariables( Player )
+function UpdatePlayerVariables( Player )
 	Player:SetNetworkedInt("bounty", Player.bounty)
 	Player:SetNetworkedInt("cash", Player.cash)
 	Player:SetNetworkedInt("multiplier", Player.multiplier)
