@@ -13,22 +13,23 @@ local CashMultiplier = 10
 -- Round functions. --
 ----------------------
 function GM:CanStartRound( iNum )
-	for k,ply in pairs(player.GetAll()) do
-		ply:SetTeam(TEAM_MAIN)
-		ply:SetRandomClass()
-	end
     return true
+end
+
+function GM:OnPreRoundStart( round_number )
+	for k,ply in pairs(player.GetAll()) do
+		ply:SetRandomClass()
+		ply.bounty = 1
+		ply.cash   = 0
+		ply.multiplier = 1
+		UpdatePlayerVariables( ply )
+	end
+	
+	self.BaseClass:OnPreRoundStart( round_number )
 end
 
 function GM:OnRoundStart( iNum )
 	self.BaseClass:OnRoundStart( iNum )
-	
-	for k,player in pairs( player.GetAll() ) do
-		player.bounty = 1
-		player.cash   = 0
-		player.multiplier = 1
-		UpdatePlayerVariables( player )
-	end
 end
 
 function GM:RoundTimerEnd()
@@ -52,7 +53,7 @@ function GM:SelectCurrentlyWinningPlayer()
 	local draw = 1
  
 	for k,v in pairs( player.GetAll() ) do
-		if v:Team() != TEAM_CONNECTING and v:Team() != TEAM_UNASSIGNED then
+		if v:Team() == TEAM_UNASSIGNED then
 			if v.cash > topscore then
 				winner = v
 				topscore = v.cash
@@ -72,21 +73,11 @@ end
 function GM:PlayerInitialSpawn( ply )
 	self.BaseClass:PlayerInitialSpawn( ply )
 	
+	ply:SetRandomClass()
 	ply.bounty = 1
 	ply.cash   = 0
 	ply.multiplier = 1
 	UpdatePlayerVariables( ply )
-	
-	ply:SetTeam(TEAM_MAIN)
-	ply:SetRandomClass()
-end
-
-function GM:PlayerJoinTeam( ply, teamid )
-	self.BaseClass:PlayerJoinTeam( ply, teamid )
-	
-	if teamid == TEAM_UNASSIGNED then
-		ply:SetTeam( TEAM_MAIN )
-	end
 end
 
 function GM:PlayerDeath( Victim, Weapon, Killer )
