@@ -1,7 +1,7 @@
 "Gamemode"
 {
 	"name"		"Bounty"
-	"version"	"0.2"
+	"version"	"0.3"
 
 	"author_name"	"Ljdp"
 	"author_email"	""
@@ -15,6 +15,7 @@
 	{
 		"1"	"^gm_"
 		"2"	"^ld_"
+		"3"	"^dm_"
 	}
 
 	"selectable"	"1"
